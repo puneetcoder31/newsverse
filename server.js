@@ -11,8 +11,8 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 
 // ✅ Your API keys
-const GNEWS_API_KEY = "62f125243861dd678378fe5d67d8b6b3";
-const FACTCHECK_API_KEY = "AIzaSyC5nTfgTMgkyaoN-RhRlQPDdevpvC9f9EQ";
+const GNEWS_API_KEY = "ok62f125243861dd678378fe5d67d8b6b3";
+const FACTCHECK_API_KEY = "pkAIzaSyC5nTfgTMgkyaoN-RhRlQPDdevpvC9f9EQ";
 
 // Helper to clean query text
 function cleanQuery(text) {
