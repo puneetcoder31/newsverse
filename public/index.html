@@ -2,41 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Fake News & Digital Trust</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake News Verifier</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>📰 Fake News Verifier</h1>
-    <p>Powered by AI + Blockchain Transparency</p>
+    <div class="card">
+      <h1>📰 Fake News Verifier</h1>
+      <textarea id="newsInput" placeholder="Paste or type news text here..."></textarea>
+      <button id="verifyBtn">Verify</button>
 
-    <textarea id="newsInput" placeholder="Paste or type your news article here..."></textarea>
-    <button id="verifyBtn">Verify News</button>
+      <div id="result" class="hidden">
+        <h3>🧠 AI Prediction: <span id="prediction"></span></h3>
+        <p><strong>📊 Confidence:</strong> <span id="confidence"></span></p>
+        <p><strong>💬 Reason:</strong> <span id="reason"></span></p>
+      </div>
 
-    <div id="result"></div>
-    <div id="ledger"></div>
+      <div id="realNewsSection" class="hidden">
+        <h3>✅ Verified News from Trusted Sources</h3>
+        <div id="realNews"></div>
+      </div>
+
+      <div id="factCheckSection" class="hidden">
+        <h3>🔍 Fact Check Results</h3>
+        <div id="factChecks"></div>
+      </div>
+    </div>
   </div>
 
   <script>
-    document.getElementById("verifyBtn").addEventListener("click", async () => {
+    const verifyBtn = document.getElementById("verifyBtn");
+    verifyBtn.addEventListener("click", async () => {
       const text = document.getElementById("newsInput").value.trim();
       if (!text) return alert("Please enter some news text!");
 
-      const res = await fetch("/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text })
-      });
+      verifyBtn.disabled = true;
+      verifyBtn.innerText = "Verifying...";
 
-      const data = await res.json();
-      document.getElementById("result").innerHTML = `
-        <h3>🧠 AI Result: <span class="${data.aiResult.label.toLowerCase()}">${data.aiResult.label}</span></h3>
-        <p>Confidence: ${data.aiResult.confidence}</p>
-        <p>Reason: ${data.aiResult.reason}</p>
-        <p><b>Blockchain Txn ID:</b> ${data.blockchainRecord.transactionId}</p>
-        <p><b>Hash:</b> ${data.blockchainRecord.hash.substring(0, 25)}...</p>
-      `;
+      try {
+        const response = await fetch("http://localhost:3000/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await response.json();
+        verifyBtn.disabled = false;
+        verifyBtn.innerText = "Verify";
+
+        // Display AI Result
+        document.getElementById("result").classList.remove("hidden");
+        document.getElementById("prediction").innerText = data.aiResult.label;
+        document.getElementById("confidence").innerText = data.aiResult.confidence;
+        document.getElementById("reason").innerText = data.aiResult.reason;
+
+        // Show real news if available
+        const realNewsDiv = document.getElementById("realNews");
+        realNewsDiv.innerHTML = "";
+        if (data.realNews && data.realNews.length > 0) {
+          document.getElementById("realNewsSection").classList.remove("hidden");
+          data.realNews.forEach(n => {
+            const item = document.createElement("div");
+            item.classList.add("news-item");
+            item.innerHTML = `
+              ${n.image ? `<img src="${n.image}" alt="news">` : ""}
+              <div>
+                <h4>${n.title}</h4>
+                <p>🗞 Source: <b>${n.source}</b></p>
+                <a href="${n.url}" target="_blank">Read more</a>
+              </div>`;
+            realNewsDiv.appendChild(item);
+          });
+        }
+
+        // Show fact checks if available
+        const factDiv = document.getElementById("factChecks");
+        factDiv.innerHTML = "";
+        if (data.factChecks && data.factChecks.length > 0) {
+          document.getElementById("factCheckSection").classList.remove("hidden");
+          data.factChecks.forEach(c => {
+            const card = document.createElement("div");
+            card.classList.add("fact-item");
+            card.innerHTML = `
+              <h4>${c.title || "Fact Check"}</h4>
+              <p><b>Claim:</b> ${c.text}</p>
+              <p><b>Rating:</b> ${c.rating || "Not Rated"}</p>
+              <p><b>Source:</b> ${c.publisher || "Unknown"}</p>
+              <a href="${c.url}" target="_blank">🔗 Read full fact check</a>`;
+            factDiv.appendChild(card);
+          });
+        }
+
+        // clear results after showing (but not input)
+        setTimeout(() => {
+          document.getElementById("result").classList.add("hidden");
+          document.getElementById("realNewsSection").classList.add("hidden");
+          document.getElementById("factCheckSection").classList.add("hidden");
+        }, 20000); // hide after 20 sec
+      } catch (error) {
+        alert("⚠️ Error verifying news. Check console.");
+        console.error(error);
+        verifyBtn.disabled = false;
+        verifyBtn.innerText = "Verify";
+      }
     });
   </script>
 </body>
 </html>
+
