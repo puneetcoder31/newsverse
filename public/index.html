@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fake News & Digital Trust</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>📰 Fake News Verifier</h1>
+    <p>Powered by AI + Blockchain Transparency</p>
+
+    <textarea id="newsInput" placeholder="Paste or type your news article here..."></textarea>
+    <button id="verifyBtn">Verify News</button>
+
+    <div id="result"></div>
+    <div id="ledger"></div>
+  </div>
+
+  <script>
+    document.getElementById("verifyBtn").addEventListener("click", async () => {
+      const text = document.getElementById("newsInput").value.trim();
+      if (!text) return alert("Please enter some news text!");
+
+      const res = await fetch("/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+
+      const data = await res.json();
+      document.getElementById("result").innerHTML = `
+        <h3>🧠 AI Result: <span class="${data.aiResult.label.toLowerCase()}">${data.aiResult.label}</span></h3>
+        <p>Confidence: ${data.aiResult.confidence}</p>
+        <p>Reason: ${data.aiResult.reason}</p>
+        <p><b>Blockchain Txn ID:</b> ${data.blockchainRecord.transactionId}</p>
+        <p><b>Hash:</b> ${data.blockchainRecord.hash.substring(0, 25)}...</p>
+      `;
+    });
+  </script>
+</body>
+</html>
